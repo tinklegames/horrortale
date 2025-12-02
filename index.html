@@ -1,124 +1,231 @@
 <!DOCTYPE html>
 <html lang="en-us">
-<head>
-    <meta charset="utf-8"/>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <title>Horror Tale</title>
-    <link rel="stylesheet" href="TemplateData/style.css"/>
+    <link rel="stylesheet" href="TemplateData/style.css" />
+
+    <!-- Stub out Yandex SDK / platform so the game doesn't crash -->
+    <script>
+      (function () {
+        const global = window;
+
+        // Base object (reuse if something already exists)
+        const sdk = global.sdk || {};
+        const ysdk = global.ysdk || sdk;
+
+        // ---- deviceInfo stub (fixes `.type` error in _GetCurrentPlatform) ----
+        const deviceInfo =
+          sdk.deviceInfo ||
+          ysdk.deviceInfo || {
+            type: "desktop",
+            isMobile: function () {
+              return false;
+            },
+            isTablet: function () {
+              return false;
+            },
+            isDesktop: function () {
+              return true;
+            },
+            isTV: function () {
+              return false;
+            },
+          };
+
+        deviceInfo.type = deviceInfo.type || "desktop";
+        deviceInfo.isMobile =
+          deviceInfo.isMobile ||
+          function () {
+            return false;
+          };
+        deviceInfo.isTablet =
+          deviceInfo.isTablet ||
+          function () {
+            return false;
+          };
+        deviceInfo.isDesktop =
+          deviceInfo.isDesktop ||
+          function () {
+            return true;
+          };
+        deviceInfo.isTV =
+          deviceInfo.isTV ||
+          function () {
+            return false;
+          };
+
+        // ---- environment stub (used by some builds, safe to include) ----
+        const environment =
+          sdk.environment ||
+          ysdk.environment || {
+            i18n: {
+              lang: "en",
+              tld: "com",
+            },
+            browser: {
+              lang: navigator.language || "en-US",
+            },
+            app: {
+              id: "stub-app-id",
+            },
+          };
+
+        // ---- feedback / rating stubs (for _CanRateUs & similar) ----
+        const feedback = sdk.feedback || ysdk.feedback || {};
+
+        feedback.canReview =
+          feedback.canReview ||
+          function () {
+            console.log("[stub] sdk.feedback.canReview called – disabled.");
+            return Promise.resolve({
+              value: false,
+              reason: "disabled",
+            });
+          };
+
+        feedback.requestReview =
+          feedback.requestReview ||
+          function () {
+            console.log(
+              "[stub] sdk.feedback.requestReview called – pretending no review."
+            );
+            return Promise.resolve({
+              feedbackSent: false,
+            });
+          };
+
+        // Some builds call sdk.canReview / sdk.rateUs directly
+        sdk.canReview =
+          sdk.canReview ||
+          function () {
+            console.log("[stub] sdk.canReview called – disabled.");
+            return Promise.resolve({
+              value: false,
+              reason: "disabled",
+            });
+          };
+
+        sdk.rateUs =
+          sdk.rateUs ||
+          function () {
+            console.log("[stub] sdk.rateUs called – no-op.");
+            return Promise.resolve({
+              feedbackSent: false,
+            });
+          };
+
+        // Attach everything back
+        sdk.deviceInfo = deviceInfo;
+        sdk.environment = environment;
+        sdk.feedback = feedback;
+
+        global.sdk = sdk;
+
+        // Make ysdk an alias if it's not already defined
+        if (!global.ysdk) {
+          global.ysdk = sdk;
+        }
+      })();
+    </script>
 
     <style>
-        html, body {
-            margin: 0;
-            padding: 0;
-            overflow: hidden;
-            height: 100%;
-        }
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+        overflow: hidden;
+        background: #000;
+      }
 
-        canvas:focus {
-            outline: none;
-        }
+      #unity-container {
+        width: 100%;
+        height: 100%;
+      }
+
+      #unity-canvas {
+        width: 100%;
+        height: 100%;
+        background: #000;
+      }
+
+      #unity-loading-bar {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+      }
+
+      #unity-progress-bar-empty {
+        width: 200px;
+        height: 20px;
+        border: 1px solid #fff;
+        margin-top: 10px;
+      }
+
+      #unity-progress-bar-full {
+        width: 0%;
+        height: 100%;
+        background: #fff;
+      }
     </style>
-</head>
-<body>
+  </head>
+
+  <body>
     <div id="unity-container" class="unity-desktop">
-        <canvas id="unity-canvas"></canvas>
-        <div id="unity-loading-bar">
-            <div id="unity-logo"></div>
-            <div id="unity-progress-bar-empty">
-                <div id="unity-progress-bar-full"></div>
-            </div>
+      <canvas id="unity-canvas"></canvas>
+      <div id="unity-loading-bar">
+        <div id="unity-logo"></div>
+        <div id="unity-progress-bar-empty">
+          <div id="unity-progress-bar-full"></div>
         </div>
+      </div>
     </div>
-<script>
-  // Fake Yandex "sdk" so rating code doesn't crash
-  (function () {
-    // If something already defined sdk, don't overwrite it completely
-    window.sdk = window.sdk || {};
-
-    // Ensure nested feedback object exists
-    sdk.feedback = sdk.feedback || {};
-
-    // Stub: sdk.feedback.canReview()
-    // Some builds use: sdk.feedback.canReview().then(...)
-    sdk.feedback.canReview = sdk.feedback.canReview || function () {
-      console.log("[stub] sdk.feedback.canReview called – returning disabled.");
-      return Promise.resolve({
-        value: false,          // "cannot review"
-        reason: "disabled"     // any string, not used by the game usually
-      });
-    };
-
-    // Stub: sdk.feedback.requestReview()
-    // Some builds call this after canReview
-    sdk.feedback.requestReview = sdk.feedback.requestReview || function () {
-      console.log("[stub] sdk.feedback.requestReview called – pretending no review was sent.");
-      return Promise.resolve({
-        feedbackSent: false
-      });
-    };
-
-    // Some integrations also use sdk.canReview / sdk.rateUs directly
-    sdk.canReview = sdk.canReview || function () {
-      console.log("[stub] sdk.canReview called – returning disabled.");
-      return Promise.resolve({
-        value: false,
-        reason: "disabled"
-      });
-    };
-
-    sdk.rateUs = sdk.rateUs || function () {
-      console.log("[stub] sdk.rateUs called – doing nothing.");
-      return Promise.resolve({
-        feedbackSent: false
-      });
-    };
-  })();
-</script>
 
     <script>
-        const buildUrl = "Build";
-        const loaderUrl = buildUrl + "/HT1_web.loader.js";  // use your actual loader file name
+      // Make gameInstance GLOBAL so the compiled code can see it
+      var gameInstance = null;
 
-        const config = {
-            dataUrl: buildUrl + "/HT1_web.data.unityweb",
-            frameworkUrl: buildUrl + "/HT1_web.framework.js.unityweb",
-            codeUrl: buildUrl + "/HT1_web.wasm.unityweb",
-            streamingAssetsUrl: "StreamingAssets",
-            companyName: "Tinkle Games",
-            productName: "Horror Tale",
-            productVersion: "1.0"
-        };
+      const buildUrl = "Build";
+      const loaderUrl = buildUrl + "/HT1_web.loader.js";
 
-        const canvas = document.querySelector("#unity-canvas");
-        const loadingBar = document.querySelector("#unity-loading-bar");
-        const progressBarFull = document.querySelector("#unity-progress-bar-full");
+      const config = {
+        dataUrl: buildUrl + "/HT1_web.data.unityweb",
+        frameworkUrl: buildUrl + "/HT1_web.framework.js.unityweb",
+        codeUrl: buildUrl + "/HT1_web.wasm.unityweb",
+        streamingAssetsUrl: "StreamingAssets",
+        companyName: "Horror Tale",
+        productName: "Horror Tale",
+        productVersion: "1.0",
+      };
 
-        loadingBar.style.display = "block";
+      const canvas = document.querySelector("#unity-canvas");
+      const loadingBar = document.querySelector("#unity-loading-bar");
+      const progressBarFull = document.querySelector(
+        "#unity-progress-bar-full"
+      );
 
-        const script = document.createElement("script");
-        script.src = loaderUrl;
+      loadingBar.style.display = "block";
 
-        script.onload = () => {
-            window._CanRateUs = function () {
-                console.log("[stub] _CanRateUs called – Yandex SDK removed, doing nothing.");
-                // return value just in case the game expects something (e.g., bool/int)
-                return 0;
-            };
+      const script = document.createElement("script");
+      script.src = loaderUrl;
+      script.onload = () => {
+        createUnityInstance(canvas, config, (progress) => {
+          progressBarFull.style.width = 100 * progress + "%";
+        })
+          .then((instance) => {
+            // IMPORTANT: assign to global gameInstance
+            gameInstance = instance;
+            loadingBar.style.display = "none";
+          })
+          .catch((message) => {
+            console.error(message);
+          });
+      };
 
-            window.sdk = window.sdk || {};
-            window.sdk.canRateUs = window.sdk.canRateUs || function () { return false; };
-            window.sdk.rateUs = window.sdk.rateUs || function () { };
-
-            createUnityInstance(canvas, config, (progress) => {
-                progressBarFull.style.width = (100 * progress) + "%";
-            }).then((unityInstance) => {
-                loadingBar.style.display = "none";
-            }).catch((message) => {
-                console.error(message);
-            });
-        };
-
-        document.body.appendChild(script);
+      document.body.appendChild(script);
     </script>
-</body>
+  </body>
 </html>
