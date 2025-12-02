@@ -1,10 +1,9 @@
 <!DOCTYPE html>
-
 <html lang="en-us">
 <head>
     <meta charset="utf-8"/>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
-    <title>Unity WebGL Player | Horror Tale</title>
+    <title>Horror Tale</title>
     <link rel="stylesheet" href="TemplateData/style.css"/>
 
     <style>
@@ -14,14 +13,15 @@
             overflow: hidden;
             height: 100%;
         }
-        canvas:focus { outline: none; }
+
+        canvas:focus {
+            outline: none;
+        }
     </style>
 </head>
-
 <body>
     <div id="unity-container" class="unity-desktop">
         <canvas id="unity-canvas"></canvas>
-
         <div id="unity-loading-bar">
             <div id="unity-logo"></div>
             <div id="unity-progress-bar-empty">
@@ -31,11 +31,8 @@
     </div>
 
     <script>
-        /* -------------------------
-           BASIC UNITY CONFIG
-        ------------------------- */
         const buildUrl = "Build";
-        const loaderUrl = buildUrl + "/HT1_web.loader.js";
+        const loaderUrl = buildUrl + "/HT1_web.loader.js";  // use your actual loader file name
 
         const config = {
             dataUrl: buildUrl + "/HT1_web.data.unityweb",
@@ -44,25 +41,29 @@
             streamingAssetsUrl: "StreamingAssets",
             companyName: "Tinkle Games",
             productName: "Horror Tale",
-            productVersion: "1.0",
+            productVersion: "1.0"
         };
 
-        /* -------------------------
-           ELEMENTS
-        ------------------------- */
         const canvas = document.querySelector("#unity-canvas");
         const loadingBar = document.querySelector("#unity-loading-bar");
         const progressBarFull = document.querySelector("#unity-progress-bar-full");
 
         loadingBar.style.display = "block";
 
-        /* -------------------------
-           LOAD UNITY INSTANCE
-        ------------------------- */
         const script = document.createElement("script");
         script.src = loaderUrl;
 
         script.onload = () => {
+            window._CanRateUs = function () {
+                console.log("[stub] _CanRateUs called – Yandex SDK removed, doing nothing.");
+                // return value just in case the game expects something (e.g., bool/int)
+                return 0;
+            };
+
+            window.sdk = window.sdk || {};
+            window.sdk.canRateUs = window.sdk.canRateUs || function () { return false; };
+            window.sdk.rateUs = window.sdk.rateUs || function () { };
+
             createUnityInstance(canvas, config, (progress) => {
                 progressBarFull.style.width = (100 * progress) + "%";
             }).then((unityInstance) => {
