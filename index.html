@@ -29,6 +29,51 @@
             </div>
         </div>
     </div>
+<script>
+  // Fake Yandex "sdk" so rating code doesn't crash
+  (function () {
+    // If something already defined sdk, don't overwrite it completely
+    window.sdk = window.sdk || {};
+
+    // Ensure nested feedback object exists
+    sdk.feedback = sdk.feedback || {};
+
+    // Stub: sdk.feedback.canReview()
+    // Some builds use: sdk.feedback.canReview().then(...)
+    sdk.feedback.canReview = sdk.feedback.canReview || function () {
+      console.log("[stub] sdk.feedback.canReview called – returning disabled.");
+      return Promise.resolve({
+        value: false,          // "cannot review"
+        reason: "disabled"     // any string, not used by the game usually
+      });
+    };
+
+    // Stub: sdk.feedback.requestReview()
+    // Some builds call this after canReview
+    sdk.feedback.requestReview = sdk.feedback.requestReview || function () {
+      console.log("[stub] sdk.feedback.requestReview called – pretending no review was sent.");
+      return Promise.resolve({
+        feedbackSent: false
+      });
+    };
+
+    // Some integrations also use sdk.canReview / sdk.rateUs directly
+    sdk.canReview = sdk.canReview || function () {
+      console.log("[stub] sdk.canReview called – returning disabled.");
+      return Promise.resolve({
+        value: false,
+        reason: "disabled"
+      });
+    };
+
+    sdk.rateUs = sdk.rateUs || function () {
+      console.log("[stub] sdk.rateUs called – doing nothing.");
+      return Promise.resolve({
+        feedbackSent: false
+      });
+    };
+  })();
+</script>
 
     <script>
         const buildUrl = "Build";
