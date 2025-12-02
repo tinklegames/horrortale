@@ -56,7 +56,7 @@
             return false;
           };
 
-        // ---- environment stub (used by some builds, safe to include) ----
+        // ---- environment stub ----
         const environment =
           sdk.environment ||
           ysdk.environment || {
@@ -115,6 +115,38 @@
               feedbackSent: false,
             });
           };
+
+        // ---- player stub (for _CheckAuthenticated and similar) ----
+        // Game often expects a global `player` object from Yandex.
+        let player = global.player || {
+          // Example async methods – safe no-ops
+          getMode: function () {
+            // "lite", "full", etc. We'll just pretend "lite".
+            return "lite";
+          },
+          getUniqueID: function () {
+            console.log("[stub] player.getUniqueID called");
+            return Promise.resolve("stub-uid");
+          },
+          getName: function () {
+            console.log("[stub] player.getName called");
+            return Promise.resolve("Guest");
+          },
+          getPhoto: function () {
+            console.log("[stub] player.getPhoto called");
+            return Promise.resolve(null);
+          },
+          getPayingStatus: function () {
+            console.log("[stub] player.getPayingStatus called");
+            return Promise.resolve("unknown");
+          },
+          getSignature: function () {
+            console.log("[stub] player.getSignature called");
+            return Promise.resolve("stub-signature");
+          },
+        };
+
+        global.player = player;
 
         // Attach everything back
         sdk.deviceInfo = deviceInfo;
@@ -185,8 +217,23 @@
     </div>
 
     <script>
-      // Make gameInstance GLOBAL so the compiled code can see it
-      var gameInstance = null;
+      // Create a stub global gameInstance with a safe SendMessage
+      // so any early JS->Unity calls don't crash.
+      window.gameInstance =
+        window.gameInstance ||
+        {
+          SendMessage: function (obj, method, value) {
+            console.log(
+              "[stub] gameInstance.SendMessage before init:",
+              obj,
+              method,
+              value
+            );
+          },
+        };
+
+      // Keep a reference for convenience (same object as window.gameInstance)
+      var gameInstance = window.gameInstance;
 
       const buildUrl = "Build";
       const loaderUrl = buildUrl + "/HT1_web.loader.js";
@@ -216,8 +263,9 @@
           progressBarFull.style.width = 100 * progress + "%";
         })
           .then((instance) => {
-            // IMPORTANT: assign to global gameInstance
-            gameInstance = instance;
+            // Copy all properties onto the existing stub object so any
+            // references to `gameInstance` keep working.
+            Object.assign(gameInstance, instance);
             loadingBar.style.display = "none";
           })
           .catch((message) => {
