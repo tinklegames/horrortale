@@ -116,10 +116,59 @@
             });
           };
 
+        // ---- ADV (ads) stub (fixes `showFullscreenAdv` in _ShowInterstitional) ----
+        const adv = sdk.adv || ysdk.adv || {};
+
+        adv.showFullscreenAdv =
+          adv.showFullscreenAdv ||
+          function (options) {
+            console.log("[stub] sdk.adv.showFullscreenAdv called", options);
+
+            const cbs = options && options.callbacks ? options.callbacks : {};
+
+            // Simulate an ad opening and closing successfully, but with no actual ad
+            try {
+              cbs.onOpen && cbs.onOpen();
+            } catch (e) {
+              console.warn("[stub] onOpen callback error", e);
+            }
+
+            try {
+              // false = ad not actually shown / or just indicate quick close
+              cbs.onClose && cbs.onClose(false);
+            } catch (e) {
+              console.warn("[stub] onClose callback error", e);
+            }
+
+            // No error, no offline. Just resolve.
+            return Promise.resolve();
+          };
+
+        // (Optional) rewarded videos, in case the build uses them:
+        adv.showRewardedVideo =
+          adv.showRewardedVideo ||
+          function (options) {
+            console.log("[stub] sdk.adv.showRewardedVideo called", options);
+            const cbs = options && options.callbacks ? options.callbacks : {};
+
+            try {
+              cbs.onOpen && cbs.onOpen();
+            } catch (e) {
+              console.warn("[stub] rewarded onOpen callback error", e);
+            }
+
+            try {
+              // Don't actually grant rewards; just close gracefully.
+              cbs.onClose && cbs.onClose(false);
+            } catch (e) {
+              console.warn("[stub] rewarded onClose callback error", e);
+            }
+
+            return Promise.resolve();
+          };
+
         // ---- player stub (for _CheckAuthenticated and similar) ----
-        // Game often expects a global `player` object from Yandex.
         let player = global.player || {
-          // Example async methods – safe no-ops
           getMode: function () {
             // "lite", "full", etc. We'll just pretend "lite".
             return "lite";
@@ -148,16 +197,22 @@
 
         global.player = player;
 
-        // Attach everything back
+        // Attach everything back on sdk and ysdk
         sdk.deviceInfo = deviceInfo;
         sdk.environment = environment;
         sdk.feedback = feedback;
+        sdk.adv = adv;
 
         global.sdk = sdk;
 
-        // Make ysdk an alias if it's not already defined
         if (!global.ysdk) {
           global.ysdk = sdk;
+        } else {
+          // if ysdk already exists, attach adv + others to it too
+          global.ysdk.deviceInfo = global.ysdk.deviceInfo || deviceInfo;
+          global.ysdk.environment = global.ysdk.environment || environment;
+          global.ysdk.feedback = global.ysdk.feedback || feedback;
+          global.ysdk.adv = global.ysdk.adv || adv;
         }
       })();
     </script>
