@@ -8,214 +8,238 @@
 
     <!-- Stub out Yandex SDK / platform so the game doesn't crash -->
     <script>
-      (function () {
-        const global = window;
+  (function () {
+    const global = window;
 
-        // Base object (reuse if something already exists)
-        const sdk = global.sdk || {};
-        const ysdk = global.ysdk || sdk;
+    // Base object (reuse if something already exists)
+    const sdk = global.sdk || {};
+    const ysdk = global.ysdk || sdk;
 
-        // ---- deviceInfo stub (fixes `.type` error in _GetCurrentPlatform) ----
-        const deviceInfo =
-          sdk.deviceInfo ||
-          ysdk.deviceInfo || {
-            type: "desktop",
-            isMobile: function () {
-              return false;
-            },
-            isTablet: function () {
-              return false;
-            },
-            isDesktop: function () {
-              return true;
-            },
-            isTV: function () {
-              return false;
-            },
-          };
+    // ---- deviceInfo stub (fixes `.type` error in _GetCurrentPlatform) ----
+    const deviceInfo =
+      sdk.deviceInfo ||
+      ysdk.deviceInfo || {
+        type: "desktop",
+        isMobile: function () {
+          return false;
+        },
+        isTablet: function () {
+          return false;
+        },
+        isDesktop: function () {
+          return true;
+        },
+        isTV: function () {
+          return false;
+        },
+      };
 
-        deviceInfo.type = deviceInfo.type || "desktop";
-        deviceInfo.isMobile =
-          deviceInfo.isMobile ||
-          function () {
-            return false;
-          };
-        deviceInfo.isTablet =
-          deviceInfo.isTablet ||
-          function () {
-            return false;
-          };
-        deviceInfo.isDesktop =
-          deviceInfo.isDesktop ||
-          function () {
-            return true;
-          };
-        deviceInfo.isTV =
-          deviceInfo.isTV ||
-          function () {
-            return false;
-          };
+    deviceInfo.type = deviceInfo.type || "desktop";
+    deviceInfo.isMobile =
+      deviceInfo.isMobile ||
+      function () {
+        return false;
+      };
+    deviceInfo.isTablet =
+      deviceInfo.isTablet ||
+      function () {
+        return false;
+      };
+    deviceInfo.isDesktop =
+      deviceInfo.isDesktop ||
+      function () {
+        return true;
+      };
+    deviceInfo.isTV =
+      deviceInfo.isTV ||
+      function () {
+        return false;
+      };
 
-        // ---- environment stub ----
-        const environment =
-          sdk.environment ||
-          ysdk.environment || {
-            i18n: {
-              lang: "en",
-              tld: "com",
-            },
-            browser: {
-              lang: navigator.language || "en-US",
-            },
-            app: {
-              id: "stub-app-id",
-            },
-          };
+    // ---- environment stub ----
+    const environment =
+      sdk.environment ||
+      ysdk.environment || {
+        i18n: {
+          lang: "en",
+          tld: "com",
+        },
+        browser: {
+          lang: navigator.language || "en-US",
+        },
+        app: {
+          id: "stub-app-id",
+        },
+      };
 
-        // ---- feedback / rating stubs (for _CanRateUs & similar) ----
-        const feedback = sdk.feedback || ysdk.feedback || {};
+    // ---- feedback / rating stubs (for _CanRateUs & similar) ----
+    const feedback = sdk.feedback || ysdk.feedback || {};
 
-        feedback.canReview =
-          feedback.canReview ||
-          function () {
-            console.log("[stub] sdk.feedback.canReview called – disabled.");
-            return Promise.resolve({
-              value: false,
-              reason: "disabled",
-            });
-          };
+    feedback.canReview =
+      feedback.canReview ||
+      function () {
+        console.log("[stub] sdk.feedback.canReview called – disabled.");
+        return Promise.resolve({
+          value: false,
+          reason: "disabled",
+        });
+      };
 
-        feedback.requestReview =
-          feedback.requestReview ||
-          function () {
-            console.log(
-              "[stub] sdk.feedback.requestReview called – pretending no review."
-            );
-            return Promise.resolve({
-              feedbackSent: false,
-            });
-          };
+    feedback.requestReview =
+      feedback.requestReview ||
+      function () {
+        console.log(
+          "[stub] sdk.feedback.requestReview called – pretending no review."
+        );
+        return Promise.resolve({
+          feedbackSent: false,
+        });
+      };
 
-        // Some builds call sdk.canReview / sdk.rateUs directly
-        sdk.canReview =
-          sdk.canReview ||
-          function () {
-            console.log("[stub] sdk.canReview called – disabled.");
-            return Promise.resolve({
-              value: false,
-              reason: "disabled",
-            });
-          };
+    // Some builds call sdk.canReview / sdk.rateUs directly
+    sdk.canReview =
+      sdk.canReview ||
+      function () {
+        console.log("[stub] sdk.canReview called – disabled.");
+        return Promise.resolve({
+          value: false,
+          reason: "disabled",
+        });
+      };
 
-        sdk.rateUs =
-          sdk.rateUs ||
-          function () {
-            console.log("[stub] sdk.rateUs called – no-op.");
-            return Promise.resolve({
-              feedbackSent: false,
-            });
-          };
+    sdk.rateUs =
+      sdk.rateUs ||
+      function () {
+        console.log("[stub] sdk.rateUs called – no-op.");
+        return Promise.resolve({
+          feedbackSent: false,
+        });
+      };
 
-        // ---- ADV (ads) stub (fixes `showFullscreenAdv` in _ShowInterstitional) ----
-        const adv = sdk.adv || ysdk.adv || {};
+    // ---- ADV (ads) stub (fixes `showFullscreenAdv` in _ShowInterstitional) ----
+    const adv = sdk.adv || ysdk.adv || {};
 
-        adv.showFullscreenAdv =
-          adv.showFullscreenAdv ||
-          function (options) {
-            console.log("[stub] sdk.adv.showFullscreenAdv called", options);
+    adv.showFullscreenAdv =
+      adv.showFullscreenAdv ||
+      function (options) {
+        console.log("[stub] sdk.adv.showFullscreenAdv called", options);
 
-            const cbs = options && options.callbacks ? options.callbacks : {};
+        const cbs = options && options.callbacks ? options.callbacks : {};
 
-            // Simulate an ad opening and closing successfully, but with no actual ad
-            try {
-              cbs.onOpen && cbs.onOpen();
-            } catch (e) {
-              console.warn("[stub] onOpen callback error", e);
-            }
-
-            try {
-              // false = ad not actually shown / or just indicate quick close
-              cbs.onClose && cbs.onClose(false);
-            } catch (e) {
-              console.warn("[stub] onClose callback error", e);
-            }
-
-            // No error, no offline. Just resolve.
-            return Promise.resolve();
-          };
-
-        // (Optional) rewarded videos, in case the build uses them:
-        adv.showRewardedVideo =
-          adv.showRewardedVideo ||
-          function (options) {
-            console.log("[stub] sdk.adv.showRewardedVideo called", options);
-            const cbs = options && options.callbacks ? options.callbacks : {};
-
-            try {
-              cbs.onOpen && cbs.onOpen();
-            } catch (e) {
-              console.warn("[stub] rewarded onOpen callback error", e);
-            }
-
-            try {
-              // Don't actually grant rewards; just close gracefully.
-              cbs.onClose && cbs.onClose(false);
-            } catch (e) {
-              console.warn("[stub] rewarded onClose callback error", e);
-            }
-
-            return Promise.resolve();
-          };
-
-        // ---- player stub (for _CheckAuthenticated and similar) ----
-        let player = global.player || {
-          getMode: function () {
-            // "lite", "full", etc. We'll just pretend "lite".
-            return "lite";
-          },
-          getUniqueID: function () {
-            console.log("[stub] player.getUniqueID called");
-            return Promise.resolve("stub-uid");
-          },
-          getName: function () {
-            console.log("[stub] player.getName called");
-            return Promise.resolve("Guest");
-          },
-          getPhoto: function () {
-            console.log("[stub] player.getPhoto called");
-            return Promise.resolve(null);
-          },
-          getPayingStatus: function () {
-            console.log("[stub] player.getPayingStatus called");
-            return Promise.resolve("unknown");
-          },
-          getSignature: function () {
-            console.log("[stub] player.getSignature called");
-            return Promise.resolve("stub-signature");
-          },
-        };
-
-        global.player = player;
-
-        // Attach everything back on sdk and ysdk
-        sdk.deviceInfo = deviceInfo;
-        sdk.environment = environment;
-        sdk.feedback = feedback;
-        sdk.adv = adv;
-
-        global.sdk = sdk;
-
-        if (!global.ysdk) {
-          global.ysdk = sdk;
-        } else {
-          // if ysdk already exists, attach adv + others to it too
-          global.ysdk.deviceInfo = global.ysdk.deviceInfo || deviceInfo;
-          global.ysdk.environment = global.ysdk.environment || environment;
-          global.ysdk.feedback = global.ysdk.feedback || feedback;
-          global.ysdk.adv = global.ysdk.adv || adv;
+        // Simulate an ad opening and closing successfully, but with no actual ad
+        try {
+          cbs.onOpen && cbs.onOpen();
+        } catch (e) {
+          console.warn("[stub] onOpen callback error", e);
         }
-      })();
-    </script>
+
+        try {
+          // false = ad not actually shown / or just indicate quick close
+          cbs.onClose && cbs.onClose(false);
+        } catch (e) {
+          console.warn("[stub] onClose callback error", e);
+        }
+
+        // No error, no offline. Just resolve.
+        return Promise.resolve();
+      };
+
+    // (Optional) rewarded videos, in case the build uses them:
+    adv.showRewardedVideo =
+      adv.showRewardedVideo ||
+      function (options) {
+        console.log("[stub] sdk.adv.showRewardedVideo called", options);
+        const cbs = options && options.callbacks ? options.callbacks : {};
+
+        try {
+          cbs.onOpen && cbs.onOpen();
+        } catch (e) {
+          console.warn("[stub] rewarded onOpen callback error", e);
+        }
+
+        try {
+          // Don't actually grant rewards; just close gracefully.
+          cbs.onClose && cbs.onClose(false);
+        } catch (e) {
+          console.warn("[stub] rewarded onClose callback error", e);
+        }
+
+        return Promise.resolve();
+      };
+
+    // ---- AUTH stub (fixes `openAuthDialog` in _Auth) ----
+    const auth = sdk.auth || ysdk.auth || {};
+
+    auth.openAuthDialog =
+      auth.openAuthDialog ||
+      function () {
+        console.log("[stub] ysdk.auth.openAuthDialog called – pretending user cancelled.");
+        // In the real SDK, this resolves with a player object or rejects on cancel.
+        // We'll just pretend the user cancelled login so the game can fallback.
+        return Promise.reject({ code: "AUTH_CANCEL" });
+      };
+
+    // ---- player stub (for _CheckAuthenticated and similar) ----
+    let player = global.player || {
+      getMode: function () {
+        // "lite", "full", etc. We'll just pretend "lite".
+        return "lite";
+      },
+      getUniqueID: function () {
+        console.log("[stub] player.getUniqueID called");
+        return Promise.resolve("stub-uid");
+      },
+      getName: function () {
+        console.log("[stub] player.getName called");
+        return Promise.resolve("Guest");
+      },
+      getPhoto: function () {
+        console.log("[stub] player.getPhoto called");
+        return Promise.resolve(null);
+      },
+      getPayingStatus: function () {
+        console.log("[stub] player.getPayingStatus called");
+        return Promise.resolve("unknown");
+      },
+      getSignature: function () {
+        console.log("[stub] player.getSignature called");
+        return Promise.resolve("stub-signature");
+      },
+    };
+
+    global.player = player;
+
+    // ---- getPlayer stub (some games call ysdk.getPlayer() after auth) ----
+    sdk.getPlayer =
+      sdk.getPlayer ||
+      function () {
+        console.log("[stub] sdk.getPlayer called");
+        return Promise.resolve(player);
+      };
+
+    // Attach everything back on sdk and ysdk
+    sdk.deviceInfo = deviceInfo;
+    sdk.environment = environment;
+    sdk.feedback = feedback;
+    sdk.adv = adv;
+    sdk.auth = auth;
+
+    global.sdk = sdk;
+
+    if (!global.ysdk) {
+      global.ysdk = sdk;
+    } else {
+      // if ysdk already exists, attach bits to it too
+      global.ysdk.deviceInfo = global.ysdk.deviceInfo || deviceInfo;
+      global.ysdk.environment = global.ysdk.environment || environment;
+      global.ysdk.feedback = global.ysdk.feedback || feedback;
+      global.ysdk.adv = global.ysdk.adv || adv;
+      global.ysdk.auth = global.ysdk.auth || auth;
+      global.ysdk.getPlayer = global.ysdk.getPlayer || sdk.getPlayer;
+    }
+  })();
+</script>
+
 
     <style>
       html,
